@@ -7,7 +7,16 @@ var lionWidth = 17;
 var lionHeight = 17;
 var lionX = Math.floor(Math.random() * (canvas.width - lionWidth));
 var lionY = Math.floor(Math.random() * (canvas.height -lionHeight));
-var lionVelocity = .04;
+var lionSpd = .06;
+// get random direction between -1, 0, and 1
+var lionDirectionX = Math.floor(Math.random() * 3) - 1;
+var lionDirectionY = Math.floor(Math.random() * 3) - 1;
+var lionTimeX = 0;
+var lionTimeY = 0;
+var lionIntentLimit = 4;
+// get random time between 1 to lionIntentLimit seconds
+var lionIntentX = (Math.floor(Math.random() * lionIntentLimit) + 1) * 1000;
+var lionIntentY = (Math.floor(Math.random() * lionIntentLimit) + 1) * 1000;
 var lionColor = "#FDD835";
 
 // Game loop stuff
@@ -22,15 +31,39 @@ var framesThisSecond = 0;
 var lastFpsUpdate = 0;
 
 function update(delta) {
-  // make the lion move
-  lionX += lionVelocity * delta;
-  lionY += lionVelocity * delta;
-  // Switch directions if we go too far
-  if (lionX >= canvas.width - lionWidth || lionX <= 0) {
-    lionVelocity = -lionVelocity;
+  // add time to lion
+  lionTimeX += delta;
+  lionTimeY += delta;
+  // change directions after some period of time
+  if (lionTimeX > lionIntentX) {
+    lionTimeX = 0;
+    lionDirectionX = Math.floor(Math.random() * 3) - 1;
+    lionIntentX = (Math.floor(Math.random() * lionIntentLimit) + 1) * 1000;
   }
-  if (lionY >= canvas.height - lionHeight || lionY <= 0) {
-    lionVelocity = -lionVelocity;
+  if (lionTimeY > lionIntentY) {
+    lionTimeY = 0;
+    lionDirectionY = Math.floor(Math.random() * 3) - 1;
+    lionIntentY = (Math.floor(Math.random() * lionIntentLimit) + 1) * 1000;
+  }
+  // move the lion
+  lionX += lionSpd * lionDirectionX * delta;
+  lionY += lionSpd * lionDirectionY * delta;
+  // if lion position is out of bounds fix position switch directions
+  if (lionX >= canvas.width - lionWidth) {
+    lionX = canvas.width - lionWidth - 1;
+    lionDirectionX = -lionDirectionX;
+  }
+  else if (lionX <= 0) {
+    lionX = 1;
+    lionDirectionX = -lionDirectionX;
+  }
+  if (lionY >= canvas.height - lionHeight) {
+    lionY = canvas.height - lionHeight - 1;
+    lionDirectionX = -lionDirectionY;
+  }
+  else if (lionY <= 0) {
+    lionY = 1;
+    lionDirectionY = -lionDirectionY;
   }
 }
 
