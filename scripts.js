@@ -1,6 +1,7 @@
 // set up canvas and context
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
+var message = document.getElementById("message");
 
 // miscellaneous stuff
 function Coord(x, y) {
@@ -12,7 +13,7 @@ function Coord(x, y) {
 var lionWidth = 17;
 var lionHeight = 17;
 var lionX = Math.floor(Math.random() * (canvas.width - lionWidth));
-var lionY = Math.floor(Math.random() * (canvas.height -lionHeight));
+var lionY = Math.floor(Math.random() * (canvas.height - lionHeight));
 var lionSpd = .06;
 // get random direction between -1, 0, and 1
 var lionDirectionX = Math.floor(Math.random() * 3) - 1;
@@ -27,7 +28,7 @@ var lionColor = "#FDD835";
 
 // Just some cage stuff
 var cageStatus = 0;
-var cageBorderLength = 53;
+var cageBorderLength = 47;
 var cageWidth = cageBorderLength;
 var cageHeight = cageBorderLength;
 var cageX = undefined;
@@ -36,11 +37,11 @@ var cageColor = "black";
 var cageBuildStage = -1;
 var cageCorners = [];
 // cage builder
-var cageBuilderSpd = 0.16;
+var cageBuilderSpd = 0.08;
 var cageBuilderCoord = new Coord(undefined, undefined);
-var buildDirection = (Math.random() * 2) > 1 ? 1 : -1;
-var current = Math.floor(Math.random() * 4);
-var next = (current + 1) % 4;
+var buildDirection = undefined;
+var current = undefined;
+var next = undefined;
 var currentBorderLength = 0;
 var builtCorners = [];
 
@@ -54,21 +55,36 @@ canvas.addEventListener("click", function(event) {
     var canvasRect = canvas.getBoundingClientRect();
     var clickX = event.clientX - canvasRect.left;
     var clickY = event.clientY - canvasRect.top;
-    console.log(clickX + "  " + clickY);
 
     // calculate cage corners
     cageX = clickX - cageBorderLength / 2;
     cageY = clickY - cageBorderLength / 2;
     cageCorners.push(new Coord(cageX, cageY));
-    cageCorners.push(new Coord(cageX, cageY + cageBorderLength));
-    cageCorners.push(new Coord(cageX + cageBorderLength, cageY + cageBorderLength));
     cageCorners.push(new Coord(cageX + cageBorderLength, cageY));
-    console.log(cageCorners);
+    cageCorners.push(new Coord(cageX + cageBorderLength, cageY + cageBorderLength));
+    cageCorners.push(new Coord(cageX, cageY + cageBorderLength));
 
     // CAPTURE THAT LION!
     cageStatus = 1;
   }
 });
+
+// check if lion is inside the cage
+function isLionCaged() {
+  // if the cage has been built
+  if (cageStatus == 0 && builtCorners.length == 5) {
+    // if the lion is inside the cage
+    if ((cageCorners[0].x < lionX && cageCorners[0].y < lionY )&&
+        (cageCorners[1].x > lionX + lionWidth && cageCorners[1].y < lionY )&&
+        (cageCorners[2].x > lionX + lionWidth && cageCorners[2].y > lionY + lionHeight )&&
+        (cageCorners[3].x < lionX && cageCorners[3].y > lionY + lionHeight)) {
+      lionSpd = 0;
+      message.innerHTML = "You've captured the lion?! Uh... PRESS F5 FOR YOUR AWESOME PRIZE!!!";
+      cageStatus = -1;
+    }
+  }
+  return false;
+}
 
 // Game loop stuff
 var lastFrameTimeMs = 0; // The last time the loop was run
@@ -116,8 +132,11 @@ function update(delta) {
     lionY = 1;
     lionDirectionY = -lionDirectionY;
   }
-  // cage test
-  if (cageStatus == 1) {
+  // cage stuff
+  if (cageStatus == 0) {
+    isLionCaged();
+  }
+  else if (cageStatus == 1) {
     if (cageBuildStage == -1) {
       // clear the built corners
       builtCorners = [];
