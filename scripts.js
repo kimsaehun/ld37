@@ -33,13 +33,13 @@ var cageHeight = cageBorderLength;
 var cageX = 100;
 var cageY = 100;
 var cageColor = "black";
-var cageBuildOrder = [0, 1, 2, 3];
 var cageBuildStage = -1;
 var cageCorners = [new Coord(100, 100), new Coord(100,153), new Coord(153,153), new Coord(153,100)];
 var cageBuildStatus = 1;
 // cage builder
-var cageBuilderSpd = 0.1;
+var cageBuilderSpd = 0.16;
 var cageBuilderCoord = new Coord(undefined, undefined);
+var buildDirection = (Math.random() * 2) > 1 ? 1 : -1;
 var current = Math.floor(Math.random() * 4);
 var next = (current + 1) % 4;
 var currentBorderLength = 0;
@@ -94,8 +94,10 @@ function update(delta) {
   // cage test
   if (cageBuildStatus == 1) {
     if (cageBuildStage == -1) {
-      current = 0;
-      next = (current + 1) % 4;
+      current = Math.floor(Math.random() * 4);
+      buildDirection = (Math.random() * 2) > 1 ? 1 : -1;
+      next = (current + (buildDirection * 1)) % 4;
+      if (next < 0) { next = 4 + next; }
       builtCorners.push(cageCorners[current]);
       cageBuilderCoord.x = builtCorners[0].x;
       cageBuilderCoord.y = builtCorners[0].y;
@@ -114,6 +116,7 @@ function update(delta) {
           // we need to move up
           cageBuilderCoord.y -= cageBuilderSpd * delta;
         }
+        // track the width of the border being built
         currentBorderLength += cageBuilderSpd * delta;
       }
       else if (cageCorners[current].y == cageCorners[next].y){
@@ -126,6 +129,7 @@ function update(delta) {
           // we need to move left
           cageBuilderCoord.x -= cageBuilderSpd * delta;
         }
+        // track the width of the border being built
         currentBorderLength += cageBuilderSpd * delta;
       }
       else {
@@ -139,7 +143,8 @@ function update(delta) {
         cageBuilderCoord.y = cageCorners[next].y;
         builtCorners.push(cageCorners[next]);
         current = next;
-        next = (current + 1) % 4;
+        next = (current + (buildDirection * 1)) % 4;
+        if (next < 0) { next = 4 + next; }
         cageBuildStage++;
       }
     }
