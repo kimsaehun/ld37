@@ -26,16 +26,15 @@ var lionIntentY = (Math.floor(Math.random() * lionIntentLimit) + 1) * 1000;
 var lionColor = "#FDD835";
 
 // Just some cage stuff
-var cageStatus = false;
+var cageStatus = 0;
 var cageBorderLength = 53;
 var cageWidth = cageBorderLength;
 var cageHeight = cageBorderLength;
-var cageX = 100;
-var cageY = 100;
+var cageX = undefined;
+var cageY = undefined;
 var cageColor = "black";
 var cageBuildStage = -1;
-var cageCorners = [new Coord(100, 100), new Coord(100,153), new Coord(153,153), new Coord(153,100)];
-var cageBuildStatus = 1;
+var cageCorners = [];
 // cage builder
 var cageBuilderSpd = 0.16;
 var cageBuilderCoord = new Coord(undefined, undefined);
@@ -44,6 +43,32 @@ var current = Math.floor(Math.random() * 4);
 var next = (current + 1) % 4;
 var currentBorderLength = 0;
 var builtCorners = [];
+
+// add click event listener to the canvas
+canvas.addEventListener("click", function(event) {
+  if (cageStatus == 0) {
+    // clear the cage corners
+    cageCorners = [];
+
+    // get mouse click coordinants
+    var canvasRect = canvas.getBoundingClientRect();
+    var clickX = event.clientX - canvasRect.left;
+    var clickY = event.clientY - canvasRect.top;
+    console.log(clickX + "  " + clickY);
+
+    // calculate cage corners
+    cageX = clickX - cageBorderLength / 2;
+    cageY = clickY - cageBorderLength / 2;
+    cageCorners.push(new Coord(cageX, cageY));
+    cageCorners.push(new Coord(cageX, cageY + cageBorderLength));
+    cageCorners.push(new Coord(cageX + cageBorderLength, cageY + cageBorderLength));
+    cageCorners.push(new Coord(cageX + cageBorderLength, cageY));
+    console.log(cageCorners);
+
+    // CAPTURE THAT LION!
+    cageStatus = 1;
+  }
+});
 
 // Game loop stuff
 var lastFrameTimeMs = 0; // The last time the loop was run
@@ -92,16 +117,20 @@ function update(delta) {
     lionDirectionY = -lionDirectionY;
   }
   // cage test
-  if (cageBuildStatus == 1) {
+  if (cageStatus == 1) {
     if (cageBuildStage == -1) {
+      // clear the built corners
+      builtCorners = [];
+      // get the starting point for building the cage
       current = Math.floor(Math.random() * 4);
       buildDirection = (Math.random() * 2) > 1 ? 1 : -1;
       next = (current + (buildDirection * 1)) % 4;
       if (next < 0) { next = 4 + next; }
+      // start building the cage
       builtCorners.push(cageCorners[current]);
       cageBuilderCoord.x = builtCorners[0].x;
       cageBuilderCoord.y = builtCorners[0].y;
-      cageBuildStage++;
+      cageBuildStage = 0;
     }
     else if (cageBuildStage < 4) {
       // get cage builder's new coordinants
@@ -138,9 +167,12 @@ function update(delta) {
 
       // check if the next corner has been reached
       if (currentBorderLength > cageBorderLength) {
+        // reset the border length
         currentBorderLength = 0;
+        // fix the cage builder's position
         cageBuilderCoord.x = cageCorners[next].x;
         cageBuilderCoord.y = cageCorners[next].y;
+        // get the next corner
         builtCorners.push(cageCorners[next]);
         current = next;
         next = (current + (buildDirection * 1)) % 4;
@@ -149,7 +181,8 @@ function update(delta) {
       }
     }
     else {
-      cageBuildStatus = 0;
+      cageStatus = 0;
+      cageBuildStage = -1;
     }
   }
 }
@@ -161,14 +194,16 @@ function draw() {
   ctx.fillStyle = lionColor;
   ctx.fillRect(lionX, lionY, lionWidth, lionHeight);
   // cage drawing test
-  ctx.beginPath();
-  ctx.strokeStyle = cageColor;
-  ctx.moveTo(builtCorners[0].x, builtCorners[0].y);
-  for (var i = 0; i < builtCorners.length; i++) {
-    ctx.lineTo(builtCorners[i].x, builtCorners[i].y);
+  if (builtCorners.length > 0) {
+    ctx.beginPath();
+    ctx.strokeStyle = cageColor;
+    ctx.moveTo(builtCorners[0].x, builtCorners[0].y);
+    for (var i = 0; i < builtCorners.length; i++) {
+      ctx.lineTo(builtCorners[i].x, builtCorners[i].y);
+    }
+    ctx.lineTo(cageBuilderCoord.x, cageBuilderCoord.y);
+    ctx.stroke();
   }
-  ctx.lineTo(cageBuilderCoord.x, cageBuilderCoord.y);
-  ctx.stroke();
   // display fps
   ctx.font = "12px Arial";
   ctx.fillStyle = "black";
