@@ -2,6 +2,12 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 
+// miscellaneous stuff
+function Coord(x, y) {
+  this.x = x;
+  this.y = y;
+}
+
 // IT'S A LION
 var lionWidth = 17;
 var lionHeight = 17;
@@ -18,6 +24,26 @@ var lionIntentLimit = 4;
 var lionIntentX = (Math.floor(Math.random() * lionIntentLimit) + 1) * 1000;
 var lionIntentY = (Math.floor(Math.random() * lionIntentLimit) + 1) * 1000;
 var lionColor = "#FDD835";
+
+// Just some cage stuff
+var cageStatus = false;
+var cageBorderLength = 53;
+var cageWidth = cageBorderLength;
+var cageHeight = cageBorderLength;
+var cageX = 100;
+var cageY = 100;
+var cageColor = "black";
+var cageBuildOrder = [0, 1, 2, 3];
+var cageBuildStage = -1;
+var cageCorners = [new Coord(100, 100), new Coord(100,153), new Coord(153,153), new Coord(153,100)];
+var cageBuildStatus = 1;
+// cage builder
+var cageBuilderSpd = 0.1;
+var cageBuilderCoord = new Coord(undefined, undefined);
+var current = Math.floor(Math.random() * 4);
+var next = (current + 1) % 4;
+var currentBorderLength = 0;
+var builtCorners = [];
 
 // Game loop stuff
 var lastFrameTimeMs = 0; // The last time the loop was run
@@ -65,6 +91,62 @@ function update(delta) {
     lionY = 1;
     lionDirectionY = -lionDirectionY;
   }
+  // cage test
+  if (cageBuildStatus == 1) {
+    if (cageBuildStage == -1) {
+      current = 0;
+      next = (current + 1) % 4;
+      builtCorners.push(cageCorners[current]);
+      cageBuilderCoord.x = builtCorners[0].x;
+      cageBuilderCoord.y = builtCorners[0].y;
+      cageBuildStage++;
+    }
+    else if (cageBuildStage < 4) {
+      // get cage builder's new coordinants
+      // determine which way to go
+      if (cageCorners[current].x == cageCorners[next].x) {
+        // moving vertically
+        if (cageCorners[current].y < cageCorners[next].y) {
+          // we need to move down
+          cageBuilderCoord.y += cageBuilderSpd * delta;
+        }
+        else if (cageCorners[current].y > cageCorners[next].y) {
+          // we need to move up
+          cageBuilderCoord.y -= cageBuilderSpd * delta;
+        }
+        currentBorderLength += cageBuilderSpd * delta;
+      }
+      else if (cageCorners[current].y == cageCorners[next].y){
+        // moving horizontally
+        if (cageCorners[current].x < cageCorners[next].x) {
+          // we need to move right
+          cageBuilderCoord.x += cageBuilderSpd * delta;
+        }
+        else if (cageCorners[current].x > cageCorners[next].x) {
+          // we need to move left
+          cageBuilderCoord.x -= cageBuilderSpd * delta;
+        }
+        currentBorderLength += cageBuilderSpd * delta;
+      }
+      else {
+        console.log("Not sure what this would mean.");
+      }
+
+      // check if the next corner has been reached
+      if (currentBorderLength > cageBorderLength) {
+        currentBorderLength = 0;
+        cageBuilderCoord.x = cageCorners[next].x;
+        cageBuilderCoord.y = cageCorners[next].y;
+        builtCorners.push(cageCorners[next]);
+        current = next;
+        next = (current + 1) % 4;
+        cageBuildStage++;
+      }
+    }
+    else {
+      cageBuildStatus = 0;
+    }
+  }
 }
 
 function draw() {
@@ -73,6 +155,15 @@ function draw() {
   // draw the lion
   ctx.fillStyle = lionColor;
   ctx.fillRect(lionX, lionY, lionWidth, lionHeight);
+  // cage drawing test
+  ctx.beginPath();
+  ctx.strokeStyle = cageColor;
+  ctx.moveTo(builtCorners[0].x, builtCorners[0].y);
+  for (var i = 0; i < builtCorners.length; i++) {
+    ctx.lineTo(builtCorners[i].x, builtCorners[i].y);
+  }
+  ctx.lineTo(cageBuilderCoord.x, cageBuilderCoord.y);
+  ctx.stroke();
   // display fps
   ctx.font = "12px Arial";
   ctx.fillStyle = "black";
