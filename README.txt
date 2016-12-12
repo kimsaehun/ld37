@@ -1,3 +1,11 @@
+First Ludum Dare entry.
+
+It was an interesting experience.
+
+Even though this is a small game, there are still some bugs that I didn't have time to fix.
+
+Hope you enjoy it!
+
 Many thanks to CSS Tricks
   - https://css-tricks.com/
 
