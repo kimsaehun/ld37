@@ -6,6 +6,8 @@ Even though this is a small game, there are still some bugs that I didn't have t
 
 Hope you enjoy it!
 
+Contact me at kimsaehun@csu.fullerton.edu for whatever reason.
+
 Many thanks to CSS Tricks
   - https://css-tricks.com/
 
