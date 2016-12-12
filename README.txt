@@ -1,4 +1,5 @@
 First Ludum Dare entry.
+Play it here! https://kimsaehun.github.io/ld37/
 
 It was an interesting experience.
 
