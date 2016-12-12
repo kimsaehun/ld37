@@ -41,6 +41,7 @@ var cageColor = "#795548";
 var cageBuildStage = -1;
 var cageCorners = [];
 // cage builder
+var cageBuilderNum = 1;
 var cageBuilderSpd = 0.08;
 var cageBuilderCoord = new Coord(undefined, undefined);
 var buildDirection = undefined;
@@ -49,8 +50,10 @@ var next = undefined;
 var currentBorderLength = 0;
 var builtCorners = [];
 
+var numClicks = 0;
 // add click event listener to the canvas
 canvas.addEventListener("click", function(event) {
+  numClicks++;
   if (cageStatus == 0) {
     // clear the cage corners
     cageCorners = [];
@@ -82,11 +85,53 @@ function isLionCaged() {
         (cageCorners[1].x > lionX + lionWidth && cageCorners[1].y < lionY )&&
         (cageCorners[2].x > lionX + lionWidth && cageCorners[2].y > lionY + lionHeight )&&
         (cageCorners[3].x < lionX && cageCorners[3].y > lionY + lionHeight)) {
-      message.innerHTML = "You've captured the lion?! Uh... PRESS F5 TO CLAIM YOUR AWESOME PRIZE!!!";
+      message.innerHTML = "You've captured the lion?! SHOOT! I mean uhh...<br><strong>CLICK <a href=\"index.html\">HERE</a> OR PRESS F5 TO CLAIM YOUR AWESOME PRIZE!!!</strong>";
       cageStatus = -1;
     }
   }
   return false;
+}
+
+// Achievements
+var bm = [
+  "C'mon, my grandma catches frogs better than you catch lions."
+];
+function checkAchievements()  {
+  if (lionLength >= 384) {
+    message.innerHTML = "Yup. That's it. I'm out. See ya.";
+  }
+  else if (lionLength >= 288) {
+    message.innerHTML = "...";
+  }
+  else if (lionLength >= 223) {
+    message.innerHTML = "What have you done...";
+  }
+  else if (lionLength >= 179) {
+    message.innerHTML = "omg omg omg what do we do?? Quick, look for time machine!";
+  }
+  else if (lionLength >= 137) {
+    message.innerHTML = "It's a monster!";
+  }
+  else if (lionLength >= 107) {
+    message.innerHTML = "uhhh should we be worried now?";
+  }
+  else if (lionLength >= 89) {
+    message.innerHTML = "Holy cow, look at the size of that thing.";
+  }
+  else if (lionLength >= 53) {
+    message.innerHTML = "That lion is fat.";
+  }
+  else if (lionLength >= 37) {
+    message.innerHTML = "Looks a little plump, but no biggie.";
+  }
+  else if (lionLength >= 21) {
+    message.innerHTML = "Wait. Is it just me or is the lion a little bigger now?";
+  }
+  else {
+    if (numClicks > 7) {
+      message.innerHTML = bm[Math.floor(Math.random() * bm.length)];
+    }
+  }
 }
 
 // Game loop stuff
@@ -259,6 +304,8 @@ function update(delta) {
         builtCorners.push(cageBuilderCoord);
         // rest in peace cage builder
         cageBuilderCoord = null;
+        // welcome next cage builder
+        cageBuilderNum++;
         // end cage building progress
         cageStatus = 0;
         cageBuildStage = -1;
@@ -286,6 +333,7 @@ function update(delta) {
     lionY = 1;
     lionDirectionY = -lionDirectionY;
   }
+  checkAchievements();
 }
 
 function draw() {

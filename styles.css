@@ -13,6 +13,7 @@ html, body {
 body {
   position: relative;
   background: #FFFDE7;
+  user-select: none;
 }
 
 #game-container {
