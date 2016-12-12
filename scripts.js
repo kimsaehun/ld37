@@ -87,6 +87,7 @@ function isLionCaged() {
         (cageCorners[3].x < lionX && cageCorners[3].y > lionY + lionHeight)) {
       message.innerHTML = "You've captured the lion?! SHOOT! I mean uhh...<br><strong>CLICK <a href=\"index.html\">HERE</a> OR PRESS F5 TO CLAIM YOUR AWESOME PRIZE!!!</strong>";
       cageStatus = -1;
+      lionSpd = 0;
     }
   }
   return false;
