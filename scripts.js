@@ -15,6 +15,9 @@ var lionHeight = 17;
 var lionX = Math.floor(Math.random() * (canvas.width - lionWidth));
 var lionY = Math.floor(Math.random() * (canvas.height - lionHeight));
 var lionSpd = .06;
+var lionBoost = 0;
+var lionMaxBoost = .06;
+var lionBoostDecay = .001;
 // get random direction between -1, 0, and 1
 var lionDirectionX = Math.floor(Math.random() * 3) - 1;
 var lionDirectionY = Math.floor(Math.random() * 3) - 1;
@@ -33,7 +36,7 @@ var cageWidth = cageBorderLength;
 var cageHeight = cageBorderLength;
 var cageX = undefined;
 var cageY = undefined;
-var cageColor = "black";
+var cageColor = "#795548";
 var cageBuildStage = -1;
 var cageCorners = [];
 // cage builder
@@ -78,8 +81,7 @@ function isLionCaged() {
         (cageCorners[1].x > lionX + lionWidth && cageCorners[1].y < lionY )&&
         (cageCorners[2].x > lionX + lionWidth && cageCorners[2].y > lionY + lionHeight )&&
         (cageCorners[3].x < lionX && cageCorners[3].y > lionY + lionHeight)) {
-      lionSpd = 0;
-      message.innerHTML = "You've captured the lion?! Uh... PRESS F5 FOR YOUR AWESOME PRIZE!!!";
+      message.innerHTML = "You've captured the lion?! Uh... PRESS F5 TO CLAIM YOUR AWESOME PRIZE!!!";
       cageStatus = -1;
     }
   }
@@ -98,43 +100,9 @@ var framesThisSecond = 0;
 var lastFpsUpdate = 0;
 
 function update(delta) {
-  // add time to lion
-  lionTimeX += delta;
-  lionTimeY += delta;
-  // change directions after some period of time
-  if (lionTimeX > lionIntentX) {
-    lionTimeX = 0;
-    lionDirectionX = Math.floor(Math.random() * 3) - 1;
-    lionIntentX = (Math.floor(Math.random() * lionIntentLimit) + 1) * 1000;
-  }
-  if (lionTimeY > lionIntentY) {
-    lionTimeY = 0;
-    lionDirectionY = Math.floor(Math.random() * 3) - 1;
-    lionIntentY = (Math.floor(Math.random() * lionIntentLimit) + 1) * 1000;
-  }
-  // move the lion
-  lionX += lionSpd * lionDirectionX * delta;
-  lionY += lionSpd * lionDirectionY * delta;
-  // if lion position is out of bounds fix position switch directions
-  if (lionX >= canvas.width - lionWidth) {
-    lionX = canvas.width - lionWidth - 1;
-    lionDirectionX = -lionDirectionX;
-  }
-  else if (lionX <= 0) {
-    lionX = 1;
-    lionDirectionX = -lionDirectionX;
-  }
-  if (lionY >= canvas.height - lionHeight) {
-    lionY = canvas.height - lionHeight - 1;
-    lionDirectionX = -lionDirectionY;
-  }
-  else if (lionY <= 0) {
-    lionY = 1;
-    lionDirectionY = -lionDirectionY;
-  }
   // cage stuff
   if (cageStatus == 0) {
-    isLionCaged();
+    // isLionCaged();
   }
   else if (cageStatus == 1) {
     if (cageBuildStage == -1) {
@@ -147,8 +115,7 @@ function update(delta) {
       if (next < 0) { next = 4 + next; }
       // start building the cage
       builtCorners.push(cageCorners[current]);
-      cageBuilderCoord.x = builtCorners[0].x;
-      cageBuilderCoord.y = builtCorners[0].y;
+      cageBuilderCoord = new Coord(builtCorners[0].x, builtCorners[0].y);
       cageBuildStage = 0;
     }
     else if (cageBuildStage < 4) {
@@ -181,7 +148,7 @@ function update(delta) {
         currentBorderLength += cageBuilderSpd * delta;
       }
       else {
-        console.log("Not sure what this would mean.");
+        console.log("Not sure what this would mean. Corners are not lined up straightly. x != x and y != y");
       }
 
       // check if the next corner has been reached
@@ -202,7 +169,103 @@ function update(delta) {
     else {
       cageStatus = 0;
       cageBuildStage = -1;
+      cageBuilderCoord = null;
     }
+  }
+  // add time to lion
+  lionTimeX += delta;
+  lionTimeY += delta;
+  // change directions after some period of time
+  if (lionTimeX > lionIntentX) {
+    lionTimeX = 0;
+    lionDirectionX = Math.floor(Math.random() * 3) - 1;
+    lionIntentX = (Math.floor(Math.random() * lionIntentLimit) + 1) * 1000;
+  }
+  if (lionTimeY > lionIntentY) {
+    lionTimeY = 0;
+    lionDirectionY = Math.floor(Math.random() * 3) - 1;
+    lionIntentY = (Math.floor(Math.random() * lionIntentLimit) + 1) * 1000;
+  }
+  // move the lion
+  lionX += lionSpd * lionDirectionX * delta;
+  lionY += lionSpd * lionDirectionY * delta;
+  // if the lion hits a border switch directions
+  // if a corner has been built
+  if (builtCorners.length > 0) {
+    // create a temp array for all corners
+    var tempCorners = []
+    for (var i = 0; i < builtCorners.length; i++) {
+      tempCorners.push(new Coord(builtCorners[i].x, builtCorners[i].y));
+    }
+    // if the cage builder exists
+    if (cageBuilderCoord) {
+     tempCorners.push(new Coord (cageBuilderCoord.x, cageBuilderCoord.y));
+    }
+    // check if borders intersect with the lion
+    for (var i = 1; i < tempCorners.length; i++) {
+      // get borders max and min coordinants
+      var x1, x2, y1, y2;
+      if (tempCorners[i-1].x <= tempCorners[i].x) {
+        x1 = tempCorners[i-1].x;
+        x2 = tempCorners[i].x;
+      }
+      else {
+        x1 = tempCorners[i].x;
+        x2 = tempCorners[i-1].x;
+      }
+      if (tempCorners[i-1].y <= tempCorners[i].y) {
+        y1 = tempCorners[i-1].y;
+        y2 = tempCorners[i].y;
+      }
+      else {
+        y1 = tempCorners[i].y;
+        y2 = tempCorners[i-1].y;
+      }
+      // if the border is horizontal
+      if (y1 == y2) {
+        // if the border is inside the lion's height
+        if (lionY <= y1 && y1 <= lionY + lionHeight) {
+          // if the lion is inside the border's width
+          if (x1 <= lionX && lionX + lionWidth <= x2) {
+            console.log("horiz collision detected. prev dir = " + lionDirectionY + " new dir = " + (-lionDirectionY));
+            // switch vertical direction
+            lionDirectionY = -lionDirectionY;
+          }
+        }
+      }
+      // if the border is vertical
+      if (x1 == x2) {
+        // if the border is inside the lion's width
+        if (lionX <= x1 && x2 <= lionX + lionWidth) {
+          // if the lion is inside the border's height
+          if (y1 <= lionY && lionY + lionHeight <= y2) {
+            console.log("vert collision detected. prev dir = " + lionDirectionX + " new dir = " + (-lionDirectionX));
+            // switch horizontal direction
+            lionDirectionX = -lionDirectionX;
+          }
+        }
+      }
+      if (x1 != x2 && y1 != y2) {
+        console.log("Error inside border collision detection. Border is neither horizontal nor vertical. x1 = " + x1 + " x2 = " + x2 + " y1 = " + y1 + " y2 = " + y2);
+      }
+    }
+  }
+  // if the lion his the canvas border
+  if (lionX >= canvas.width - lionWidth) {
+    lionX = canvas.width - lionWidth - 1;
+    lionDirectionX = -lionDirectionX;
+  }
+  else if (lionX <= 0) {
+    lionX = 1;
+    lionDirectionX = -lionDirectionX;
+  }
+  if (lionY >= canvas.height - lionHeight) {
+    lionY = canvas.height - lionHeight - 1;
+    lionDirectionY = -lionDirectionY;
+  }
+  else if (lionY <= 0) {
+    lionY = 1;
+    lionDirectionY = -lionDirectionY;
   }
 }
 
@@ -220,7 +283,10 @@ function draw() {
     for (var i = 0; i < builtCorners.length; i++) {
       ctx.lineTo(builtCorners[i].x, builtCorners[i].y);
     }
-    ctx.lineTo(cageBuilderCoord.x, cageBuilderCoord.y);
+    // if cage builder exists
+    if (cageBuilderCoord) {
+      ctx.lineTo(cageBuilderCoord.x, cageBuilderCoord.y);
+    }
     ctx.stroke();
   }
   // display fps
