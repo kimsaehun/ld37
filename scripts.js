@@ -10,8 +10,9 @@ function Coord(x, y) {
 }
 
 // IT'S A LION
-var lionWidth = 17;
-var lionHeight = 17;
+var lionLength = 17;
+var lionWidth = lionLength;
+var lionHeight = lionLength;
 var lionX = Math.floor(Math.random() * (canvas.width - lionWidth));
 var lionY = Math.floor(Math.random() * (canvas.height - lionHeight));
 var lionSpd = .06;
@@ -102,7 +103,7 @@ var lastFpsUpdate = 0;
 function update(delta) {
   // cage stuff
   if (cageStatus == 0) {
-    // isLionCaged();
+    isLionCaged();
   }
   else if (cageStatus == 1) {
     if (cageBuildStage == -1) {
@@ -227,7 +228,6 @@ function update(delta) {
         if (lionY <= y1 && y1 <= lionY + lionHeight) {
           // if the lion is inside the border's width
           if (x1 <= lionX && lionX + lionWidth <= x2) {
-            console.log("horiz collision detected. prev dir = " + lionDirectionY + " new dir = " + (-lionDirectionY));
             // switch vertical direction
             lionDirectionY = -lionDirectionY;
           }
@@ -239,7 +239,6 @@ function update(delta) {
         if (lionX <= x1 && x2 <= lionX + lionWidth) {
           // if the lion is inside the border's height
           if (y1 <= lionY && lionY + lionHeight <= y2) {
-            console.log("vert collision detected. prev dir = " + lionDirectionX + " new dir = " + (-lionDirectionX));
             // switch horizontal direction
             lionDirectionX = -lionDirectionX;
           }
@@ -247,6 +246,26 @@ function update(delta) {
       }
       if (x1 != x2 && y1 != y2) {
         console.log("Error inside border collision detection. Border is neither horizontal nor vertical. x1 = " + x1 + " x2 = " + x2 + " y1 = " + y1 + " y2 = " + y2);
+      }
+    }
+  }
+  // check if the cage builder and the lion has collided
+  // if the cage builder exists
+  if (cageBuilderCoord){
+    // if the cage builder is inside the lion
+    if (lionX <= cageBuilderCoord.x && cageBuilderCoord.x <= lionX + lionWidth) {
+      if (lionY <= cageBuilderCoord.y && cageBuilderCoord.y <= lionY + lionHeight) {
+        // add cage builder's final corner
+        builtCorners.push(cageBuilderCoord);
+        // rest in peace cage builder
+        cageBuilderCoord = null;
+        // end cage building progress
+        cageStatus = 0;
+        cageBuildStage = -1;
+        // the lion got fatter
+        lionLength += 2;
+        lionWidth += 2;
+        lionHeight += 2;
       }
     }
   }
